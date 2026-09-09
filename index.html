@@ -182,12 +182,39 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-user-lock text-amber-400"></i>
-          <h3 class="font-bold text-white text-sm">Panel Kontrol Operator (Tersembunyi)</h3>
+          <h3 class="font-bold text-white text-sm">Panel Kontrol Operator & GitHub Sync</h3>
         </div>
         <button onclick="closeSecretModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="space-y-4">
+        <!-- GitHub Auto-Sync Integration Section -->
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-sky-500/40 space-y-2.5">
+          <div class="flex items-center gap-2 text-sky-400 text-xs font-bold border-b border-slate-800 pb-2">
+            <i class="fa-brands fa-github text-sm"></i>
+            <span>Simpan Permanen ke GitHub (Auto-Deploy Vercel Cross-Device)</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Username GitHub:</label>
+              <input type="text" id="ghOwnerInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-sky-500" placeholder="Contoh: username-anda">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Nama Repository:</label>
+              <input type="text" id="ghRepoInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-sky-500" placeholder="Contoh: arisan-kupp">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-400 mb-1">GitHub Personal Access Token (PAT):</label>
+            <input type="password" id="ghTokenInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:outline-none focus:border-sky-500 font-mono" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <button id="ghSyncBtn" onclick="commitToGitHub()" class="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>🚀 Sync & Commit Perubahan ke GitHub Now</span>
+          </button>
+          <p class="text-[10px] text-slate-400 italic">Perubahan daftar nama & settingan di web akan langsung tersimpan di file repository GitHub Anda secara otomatis!</p>
+        </div>
+
         <!-- Mode Selector -->
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Mode Pengundian Aktif:</label>
@@ -250,7 +277,7 @@
       </div>
 
       <button onclick="closeSecretModal()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs uppercase tracking-wider">
-        Simpan & Terapkan
+        Tutup & Terapkan Lokal
       </button>
     </div>
   </div>
@@ -498,7 +525,6 @@
       // 1. Filter names based on blacklist
       let validCandidates = names.filter(n => !blacklist.includes(n));
       if (validCandidates.length === 0) {
-        // Fallback to all names if everything was blacklisted by mistake
         validCandidates = [...names];
       }
 
@@ -506,24 +532,21 @@
       let targetWinnerName = "";
 
       if (secretMode === "AUTO_SEQUENCE") {
-        // Find next valid candidate from secretQueue starting at currentSpinCount
         let found = false;
         for (let i = currentSpinCount; i < secretQueue.length; i++) {
           const candidate = secretQueue[i].trim();
           if (names.includes(candidate) && !blacklist.includes(candidate)) {
             targetWinnerName = candidate;
-            currentSpinCount = i; // Align pointer
+            currentSpinCount = i;
             found = true;
             break;
           }
         }
 
-        // If queue exhausted or all targets blacklisted, pick random from validCandidates
         if (!found) {
           targetWinnerName = validCandidates[Math.floor(Math.random() * validCandidates.length)];
         }
       } else if (secretMode === "RANDOM") {
-        // Weighted random picking considering boostedNames and boostFactor
         if (boostedNames.length > 0) {
           let totalWeight = 0;
           const weights = validCandidates.map(name => {
@@ -548,7 +571,6 @@
           targetWinnerName = validCandidates[Math.floor(Math.random() * validCandidates.length)];
         }
       } else {
-        // Specific name target
         if (names.includes(secretMode) && !blacklist.includes(secretMode)) {
           targetWinnerName = secretMode;
         } else {
@@ -556,23 +578,18 @@
         }
       }
 
-      // Ensure winner is in current names list
       let winnerIndex = names.indexOf(targetWinnerName);
       if (winnerIndex === -1) {
         winnerIndex = Math.floor(Math.random() * names.length);
         targetWinnerName = names[winnerIndex];
       }
 
-      // Calculate Angles for Precise Landing at Top (270 degrees / 1.5 PI)
       const numSlices = names.length;
       const sliceAngle = (Math.PI * 2) / numSlices;
-
       const sliceMid = (winnerIndex + 0.5) * sliceAngle;
       
-      // Pointer is at Top (1.5 * PI = 270 deg)
       let desiredAngle = (1.5 * Math.PI) - sliceMid;
 
-      // Normalize desiredAngle relative to currentRotationRad
       const twoPi = Math.PI * 2;
       desiredAngle = desiredAngle % twoPi;
       if (desiredAngle < 0) desiredAngle += twoPi;
@@ -581,12 +598,10 @@
       let angleDiff = desiredAngle - currentMod;
       if (angleDiff <= 0) angleDiff += twoPi;
 
-      // Add full rotations
       const fullSpins = 6 * twoPi;
       const totalRotationDelta = fullSpins + angleDiff;
 
-      // Animation parameters
-      const duration = 5500; // 5.5 seconds
+      const duration = 5500;
       const startTime = performance.now();
       const startRotation = currentRotationRad;
 
@@ -594,11 +609,9 @@
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // Ease Out Cubic function
         const easeOut = 1 - Math.pow(1 - progress, 3);
         currentRotationRad = startRotation + totalRotationDelta * easeOut;
 
-        // Check tick audio
         const currentModAngle = (currentRotationRad % twoPi + twoPi) % twoPi;
         const pointerRelAngle = (1.5 * Math.PI - currentModAngle + twoPi) % twoPi;
         const currentSliceIdx = Math.floor(pointerRelAngle / sliceAngle) % numSlices;
@@ -613,7 +626,6 @@
         if (progress < 1) {
           requestAnimationFrame(animateSpin);
         } else {
-          // Spin completed!
           isSpinning = false;
           if (secretMode === "AUTO_SEQUENCE") {
             currentSpinCount++;
@@ -624,7 +636,6 @@
           document.getElementById('spinButton').classList.remove('opacity-50', 'cursor-not-allowed');
           document.getElementById('statusMsg').textContent = 'Pengundian selesai!';
 
-          // Trigger Winner
           onWinnerSelected(targetWinnerName);
         }
       }
@@ -636,21 +647,18 @@
       playWinSound();
       triggerConfetti();
 
-      // Add to winner history
       winnersHistory.unshift({
         name: winnerName,
         time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       });
       renderWinnersLog();
 
-      // Hapus pemenang dari daftar peserta aktif di roda secara otomatis
       names = names.filter(n => n !== winnerName);
       document.getElementById('namesInput').value = names.join('\n');
       document.getElementById('nameCount').textContent = names.length;
       updatePresetDropdown();
       drawWheel();
 
-      // Display Modal
       document.getElementById('modalWinnerName').textContent = winnerName;
       const modal = document.getElementById('winnerModal');
       modal.classList.remove('hidden');
@@ -707,7 +715,7 @@
         confettiParticles.forEach((p) => {
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.3; // Gravity
+          p.vy += 0.3;
           p.rotation += p.vRot;
 
           if (p.y < window.innerHeight + 50) alive = true;
@@ -803,7 +811,6 @@
         return;
       }
 
-      // Mode Auto Sequence
       const remainingQueue = secretQueue.slice(currentSpinCount).filter(n => !blacklist.includes(n));
       if (remainingQueue.length > 0) {
         badge.textContent = `Berikutnya: ${remainingQueue[0]} (${remainingQueue.length} Antrean Sisa)`;
@@ -855,7 +862,7 @@
       }
     }
 
-    // Secret Online Click Trigger (3x tap on Online badge triggers Shift + 2 / Random mode with Blacklist active)
+    // Secret Online Click Trigger
     let onlineClickCount = 0;
     let onlineClickTimer = null;
 
@@ -878,7 +885,6 @@
     }
 
     function openSecretModal() {
-      // Sync UI values with current state
       document.getElementById('secretQueueInput').value = secretQueue.join('\n');
       document.getElementById('blacklistInput').value = blacklist.join('\n');
       document.getElementById('boostInput').value = boostedNames.join('\n');
@@ -886,6 +892,11 @@
         document.getElementById('boostFactorSelect').value = boostFactor.toString();
       }
       document.getElementById('presetSelect').value = secretMode;
+
+      // Restore GitHub sync credentials from localStorage
+      if (localStorage.getItem('gh_owner')) document.getElementById('ghOwnerInput').value = localStorage.getItem('gh_owner');
+      if (localStorage.getItem('gh_repo')) document.getElementById('ghRepoInput').value = localStorage.getItem('gh_repo');
+      if (localStorage.getItem('gh_token')) document.getElementById('ghTokenInput').value = localStorage.getItem('gh_token');
 
       updateQueueBadge();
 
@@ -901,15 +912,100 @@
       setTimeout(() => modal.classList.add('hidden'), 300);
     }
 
+    // GitHub API Commit & Sync Logic
+    async function commitToGitHub() {
+      const owner = document.getElementById('ghOwnerInput').value.trim();
+      const repo = document.getElementById('ghRepoInput').value.trim();
+      const token = document.getElementById('ghTokenInput').value.trim();
+
+      if (!owner || !repo || !token) {
+        alert("⚠️ Harap lengkapi Username GitHub, Nama Repository, dan Personal Access Token (PAT)!");
+        return;
+      }
+
+      saveSecretSettings();
+
+      // Save credentials locally for convenience
+      localStorage.setItem('gh_owner', owner);
+      localStorage.setItem('gh_repo', repo);
+      localStorage.setItem('gh_token', token);
+
+      const btn = document.getElementById('ghSyncBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i><span>Menghubungkan ke GitHub...</span>';
+
+      try {
+        const filePath = "index.html";
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+        // 1. Get existing file details (SHA & current content)
+        const getRes = await fetch(url, {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!getRes.ok) {
+          throw new Error("Gagal mengambil file dari GitHub. Pastikan Username, Nama Repo, & Token sudah benar.");
+        }
+
+        const fileData = await getRes.json();
+        const sha = fileData.sha;
+
+        // Decode UTF-8 Base64 content
+        let htmlContent = decodeURIComponent(escape(atob(fileData.content.replace(/\s/g, ''))));
+
+        // Format updated variables
+        const formattedNames = JSON.stringify(names, null, 6);
+        const formattedQueue = JSON.stringify(secretQueue, null, 6);
+        const formattedBlacklist = JSON.stringify(blacklist, null, 6);
+
+        // Regex replace DEFAULT_NAMES, secretQueue, and blacklist
+        htmlContent = htmlContent.replace(/const DEFAULT_NAMES = \[\s*[\s\S]*?\n\s*\];/m, `const DEFAULT_NAMES = ${formattedNames};`);
+        htmlContent = htmlContent.replace(/let secretQueue = \[\s*[\s\S]*?\n\s*\];/m, `let secretQueue = ${formattedQueue};`);
+        htmlContent = htmlContent.replace(/let blacklist = \[\s*[\s\S]*?\n\s*\];/m, `let blacklist = ${formattedBlacklist};`);
+
+        // Re-encode content to UTF-8 Base64
+        const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
+
+        // 2. Commit update via PUT request
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'Update daftar nama & settingan via Web Operator',
+            content: encodedContent,
+            sha: sha
+          })
+        });
+
+        if (putRes.ok) {
+          alert("🎉 BERHASIL DIBUATAN COMMIT KE GITHUB!\n\nVercel sedang memproses update (10-20 detik). Dalam beberapa saat, seluruh HP/Laptop lain yang membuka situs ini akan langsung menampilkan data terbaru!");
+        } else {
+          const errData = await putRes.json();
+          throw new Error(errData.message || "Gagal mengupdate file di GitHub.");
+        }
+      } catch (err) {
+        alert("❌ Terjadi Kesalahan: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
     // Keyboard Shortcuts for Operator
     document.addEventListener('keydown', (e) => {
-      // Ignore shortcut listeners when user is actively typing in text inputs or textareas
       const activeTag = document.activeElement.tagName;
       if (activeTag === 'TEXTAREA' || activeTag === 'INPUT' || activeTag === 'SELECT') {
         return;
       }
 
-      // Shift + S: Open/Close Secret Menu
       if (e.shiftKey && (e.key === 'S' || e.key === 's')) {
         e.preventDefault();
         const modal = document.getElementById('secretModal');
@@ -921,7 +1017,6 @@
         return;
       }
 
-      // Shift + 1: Mode Skenario Otomatis (Multi-winner sequence + respect blacklist)
       if (e.shiftKey && (e.key === '1' || e.code === 'Digit1' || e.key === '!')) {
         e.preventDefault();
         secretMode = "AUTO_SEQUENCE";
@@ -930,7 +1025,6 @@
         return;
       }
 
-      // Shift + 2: Mode Random (Acak + respect blacklist)
       if (e.shiftKey && (e.key === '2' || e.code === 'Digit2' || e.key === '@')) {
         e.preventDefault();
         secretMode = "RANDOM";
@@ -943,7 +1037,6 @@
     // Initialize Page
     window.addEventListener('load', () => {
       resetDefaultNames();
-      // Initialize Default Secret Queue and Blacklist values
       document.getElementById('secretQueueInput').value = "Taryono\nIyansyah";
       document.getElementById('blacklistInput').value = "Imran\nPratichayu\nUsthy\nRafii";
       saveSecretSettings();
