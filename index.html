@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arisan KUPP Tanjung Santan</title>
-  <!-- Tailwind CSS -->
+  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
+  <!-- FontAwesome Icons CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Font -->
+  <!-- Google Font Plus Jakarta Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   
   <style>
@@ -69,11 +70,11 @@
 </head>
 <body class="bg-navy-gradient min-h-screen text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-slate-900 overflow-x-hidden">
 
-  <!-- Navigation / Header -->
+  <!-- Navigation Header -->
   <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Secret trigger on triple click -->
+        <!-- Secret trigger on triple click logo -->
         <div id="secretLogoTrigger" onclick="handleLogoClick()" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-amber-500/20 cursor-pointer select-none" title="Arisan KUPP Tanjung Santan">
           <i class="fa-solid font-bold fa-anchor"></i>
         </div>
@@ -91,6 +92,7 @@
           <i id="soundIcon" class="fa-solid fa-volume-high text-amber-400"></i>
           <span id="soundText" class="hidden sm:inline">Suara: On</span>
         </button>
+        <!-- 3x tap on Online badge triggers Shift + 2 (Random mode + Blacklist active) -->
         <div id="onlineTrigger" onclick="handleOnlineClick()" class="px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-slate-400 text-xs flex items-center gap-1.5 cursor-pointer select-none" title="Status Sistem">
           <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span>Online</span>
@@ -191,7 +193,7 @@
           <label class="block text-xs font-semibold text-slate-300 mb-1">Mode Pengundian Aktif:</label>
           <select id="presetSelect" onchange="onSecretModeChange()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-amber-300 font-semibold focus:outline-none focus:border-amber-500">
             <option value="AUTO_SEQUENCE">⚡ Skenario Otomatis (Gunakan Urutan Rahasia)</option>
-            <option value="RANDOM">🎲 Acak Murni (Random dengan Blacklist)</option>
+            <option value="RANDOM">🎲 Acak Murni (Random dengan Blacklist & Boost)</option>
           </select>
         </div>
 
@@ -325,8 +327,8 @@
     let soundEnabled = true;
     
     // Rigging Queue & Blacklist State
-    let secretQueue = ["Taryono", "Iyansyah"];
-    let blacklist = ["Imran", "Pratichayu", "Usthy", "Rafii"];
+    let secretQueue = ["Taryono", "Iyansyah"]; // Taryono (Round 1), Iyansyah (Round 2)
+    let blacklist = ["Imran", "Pratichayu", "Usthy", "Rafii"]; // Blacklist active
     let boostedNames = [];
     let boostFactor = 5;
     let secretMode = "AUTO_SEQUENCE"; // 'AUTO_SEQUENCE', 'RANDOM', or specific name
@@ -390,6 +392,7 @@
     let currentRotationRad = 0; // Current angle in radians
 
     function resetDefaultNames() {
+      names = [...DEFAULT_NAMES];
       document.getElementById('namesInput').value = DEFAULT_NAMES.join('\n');
       onNamesUpdated();
     }
@@ -564,8 +567,6 @@
       const numSlices = names.length;
       const sliceAngle = (Math.PI * 2) / numSlices;
 
-      // Slice i spans [i * sliceAngle, (i+1) * sliceAngle]
-      // Midpoint of slice i is (i + 0.5) * sliceAngle
       const sliceMid = (winnerIndex + 0.5) * sliceAngle;
       
       // Pointer is at Top (1.5 * PI = 270 deg)
